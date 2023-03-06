@@ -1,8 +1,12 @@
-export function atom<AtomType>(initialValue: AtomType): {
+import { useState, useEffect } from "react";
+
+interface Atom<AtomType> {
   get: () => AtomType;
   set: (newValue: AtomType) => void;
   subscribe: (callback: (newValue: AtomType) => void) => () => void;
-} {
+}
+
+export function atom<AtomType>(initialValue: AtomType): Atom<AtomType> {
   let value = initialValue;
 
   const subscribers = new Set<(newValue: AtomType) => void>();
@@ -22,13 +26,15 @@ export function atom<AtomType>(initialValue: AtomType): {
   };
 }
 
-export function useAtom(atom: Atom<any>) {
-  const [state, setState] = useState(atom.value);
+export function useAtom<AtomType>(atom: Atom<AtomType>) {
+  const [value, setValue] = useState(atom.get());
+
   useEffect(() => {
-    const unsubscribe = atom.subscribe(setState);
+    const unsubscribe = atom.subscribe(setValue);
     return () => {
       unsubscribe();
     };
   }, [atom]);
-  return [state, atom.set];
+
+  return [value, atom.set];
 }
