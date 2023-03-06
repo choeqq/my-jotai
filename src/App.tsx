@@ -14,10 +14,11 @@ function SalaryDisplay() {
 
 function App() {
   const [salary, setSalary] = useAtom(salaryAtom);
-  const [bonus, setBonus] = useAtom(salaryAtom);
+  const [bonus, setBonus] = useAtom(bonusAtom);
   const totalSalary = useAtomValue(totalSalaryAtom);
   const data = useAtomValue(dataAtom);
   const keys = useAtomValue(keysAtom);
+  console.log(data);
 
   return (
     <div id="root">

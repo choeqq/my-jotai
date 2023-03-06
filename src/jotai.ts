@@ -13,19 +13,20 @@ type AtomGetter<AtomType> = (
 export function atom<AtomType>(
   initialValue: AtomType | AtomGetter<AtomType>
 ): Atom<AtomType> {
-  let value =
+  let value: AtomType =
     typeof initialValue === "function" ? (null as AtomType) : initialValue;
 
   const subscribers = new Set<(newValue: AtomType) => void>();
 
   function get<Target>(atom: Atom<Target>) {
     let currentValue = atom.get();
-
     atom.subscribe((newValue) => {
       if (currentValue === newValue) return;
 
       currentValue = newValue;
+
       computeValue();
+
       subscribers.forEach((callback) => callback(value));
     });
 
@@ -52,12 +53,13 @@ export function atom<AtomType>(
 
   return {
     get: () => value,
-    set: (newValue: AtomType) => {
+    set: (newValue) => {
       value = newValue;
       subscribers.forEach((callback) => callback(value));
     },
     subscribe: (callback) => {
       subscribers.add(callback);
+
       return () => {
         subscribers.delete(callback);
       };
@@ -70,5 +72,5 @@ export function useAtom<AtomType>(atom: Atom<AtomType>) {
 }
 
 export function useAtomValue<AtomType>(atom: Atom<AtomType>) {
-  return [useSyncExternalStore(atom.subscribe, atom.get)];
+  return useSyncExternalStore(atom.subscribe, atom.get);
 }
