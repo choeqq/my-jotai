@@ -4,6 +4,7 @@ interface Atom<AtomType> {
   get: () => AtomType;
   set: (newValue: AtomType) => void;
   subscribe: (callback: (newValue: AtomType) => void) => () => void;
+  _subscribers: () => number;
 }
 
 type AtomGetter<AtomType> = (
@@ -17,45 +18,44 @@ export function atom<AtomType>(
     typeof initialValue === "function" ? (null as AtomType) : initialValue;
 
   const subscribers = new Set<(newValue: AtomType) => void>();
+  const subscribed = new Set<Atom<any>>();
 
   function get<Target>(atom: Atom<Target>) {
     let currentValue = atom.get();
-    atom.subscribe((newValue) => {
-      if (currentValue === newValue) return;
+    if (!subscribed.has(atom)) {
+      subscribed.add(atom);
+      atom.subscribe((newValue) => {
+        if (currentValue === newValue) return;
 
-      currentValue = newValue;
+        currentValue = newValue;
 
-      computeValue();
+        computeValue();
 
-      subscribers.forEach((callback) => callback(value));
-    });
+        subscribers.forEach((callback) => callback(value));
+      });
+    }
 
     return currentValue;
   }
 
-  function computeValue() {
+  async function computeValue() {
     const newValue =
       typeof initialValue === "function"
         ? (initialValue as AtomGetter<AtomType>)(get)
         : value;
 
-    if (newValue && typeof (newValue as any).then === "function") {
-      value = null as AtomType;
-      (newValue as any as Promise<AtomType>).then((resolvedValue) => {
-        value = resolvedValue;
-        subscribers.forEach((callback) => callback(value));
-      });
-    } else {
-      value = newValue;
-    }
+    value = null as AtomType;
+    value = await newValue;
+    subscribers.forEach((callback) => callback(value));
   }
+
   computeValue();
 
   return {
     get: () => value,
     set: (newValue) => {
       value = newValue;
-      subscribers.forEach((callback) => callback(value));
+      computeValue();
     },
     subscribe: (callback) => {
       subscribers.add(callback);
@@ -64,6 +64,7 @@ export function atom<AtomType>(
         subscribers.delete(callback);
       };
     },
+    _subscribers: () => subscribers.size,
   };
 }
 
