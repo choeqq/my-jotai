@@ -21,7 +21,7 @@ function App() {
   const keys = useAtomValue(keysAtom);
 
   return (
-    <div>
+    <div className="root">
       <div>
         <input
           type="number"
@@ -40,7 +40,6 @@ function App() {
         />
       </div>
       <div>Bonus: {bonus}</div>
-
       <div>Total Salary: {totalSalary}</div>
       <div>Data: {JSON.stringify(data)}</div>
       <div>Keys: {JSON.stringify(keys)}</div>

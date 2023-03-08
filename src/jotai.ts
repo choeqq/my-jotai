@@ -22,16 +22,13 @@ export function atom<AtomType>(
 
   function get<Target>(atom: Atom<Target>) {
     let currentValue = atom.get();
+
     if (!subscribed.has(atom)) {
       subscribed.add(atom);
-      atom.subscribe((newValue) => {
+      atom.subscribe(function (newValue) {
         if (currentValue === newValue) return;
-
         currentValue = newValue;
-
         computeValue();
-
-        subscribers.forEach((callback) => callback(value));
       });
     }
 
@@ -43,7 +40,6 @@ export function atom<AtomType>(
       typeof initialValue === "function"
         ? (initialValue as AtomGetter<AtomType>)(get)
         : value;
-
     value = null as AtomType;
     value = await newValue;
     subscribers.forEach((callback) => callback(value));
@@ -59,7 +55,6 @@ export function atom<AtomType>(
     },
     subscribe: (callback) => {
       subscribers.add(callback);
-
       return () => {
         subscribers.delete(callback);
       };
